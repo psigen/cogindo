@@ -1,13 +1,15 @@
 from cogindo import db
 from cogindo import api
+from cogindo import app
 from cogindo.teams import Team
 
-from flask import jsonify, request
+from flask import jsonify, request, send_from_directory
 from flask.ext.security import login_required, current_user
 from flask.ext.restful import Resource, abort
 
 import datetime
 import threading
+import os
 
 
 def get_subclasses(c):
@@ -104,6 +106,25 @@ class Puzzle(object):
                     puzzle = c()
                     Puzzle.PUZZLE_INSTANCES[puzzle_name] = puzzle
                     return puzzle
+
+
+@app.route('/puzzles/<puzzle_name>/<path:filename>')
+def puzzle_file(puzzle_name, filename):
+    """
+    File downloader that only allows teams to see content for puzzles
+    that they have unlocked.
+    """
+    team = current_user.team
+    if team is None:
+        abort(404, message="User is not on a team.")
+
+    state = PuzzleState.objects(team=team, name=puzzle_name).first()
+    if state is None:
+        abort(404, message="Puzzle not found.")
+
+    return send_from_directory(
+        os.path.join(app.root_path, 'puzzles', puzzle_name),
+        filename)
 
 
 class PuzzleResource(Resource):
