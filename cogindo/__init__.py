@@ -35,5 +35,6 @@ api = Api(app)
 # Create route views.
 import cogindo.users
 import cogindo.teams
+import cogindo.puzzles
 import cogindo.views
 cogindo.views  # TODO: keep linter from complaining.
