@@ -1,8 +1,11 @@
-from flask import render_template, current_app
+from flask import render_template, current_app, redirect, url_for
 from flask.ext.security import Security, MongoEngineUserDatastore, \
-    UserMixin, RoleMixin, login_required
-from flask.ext.social import Social
+    UserMixin, RoleMixin, login_required, login_user
+from flask.ext.social import Social, login_failed
+from flask.ext.social.utils import get_connection_values_from_oauth_response
+from flask.ext.social.views import connect_handler
 from flask.ext.social.datastore import MongoEngineConnectionDatastore
+import uuid
 
 from cogindo import app
 from cogindo import db
@@ -19,13 +22,20 @@ class Role(db.Document, RoleMixin):
 
 
 class User(db.Document, UserMixin):
-    email = db.StringField(unique=True, max_length=255)
+    email = db.StringField(max_length=255)
     password = db.StringField(max_length=255)
     active = db.BooleanField(default=True)
     remember_token = db.StringField(max_length=255)
     authentication_token = db.StringField(max_length=255)
     roles = db.ListField(db.ReferenceField(Role), default=[])
     team = db.ReferenceField(Team)
+
+    meta = {
+        'indexes': [
+            {'fields': ['email'], 'unique': True,
+             'sparse': True, 'types': False},
+        ],
+    }
 
     @property
     def connections(self):
@@ -56,14 +66,14 @@ Social(app, MongoEngineConnectionDatastore(db, Connection))
 # Create test users.
 @app.before_first_request
 def create_default_users():
-    for m in [User, Role, Connection]:
-        m.drop_collection()
+#    for m in [User, Role, Connection]:
+#        m.drop_collection()
 
-    current_app.security.datastore.create_user(email='psigen@gmail.com',
-                                               password='moocow')
-    current_app.security.datastore.create_user(email='jkl@example.com',
-                                               password='jkljkl')
-    current_app.security.datastore.commit()
+    current_app.extensions['security'].datastore.create_user(
+        email='psigen@gmail.com', password='moocow')
+    current_app.extensions['security'].datastore.create_user(
+        email='jkl@example.com', password='jkljkl')
+    current_app.extensions['security'].datastore.commit()
 
 
 @app.route('/profile')
@@ -72,4 +82,25 @@ def profile():
     return render_template(
         'profile.html',
         content='Profile Page',
-        google_conn=current_app.social.google.get_connection())
+        google_conn=current_app.extensions['social'].google.get_connection())
+
+
+@login_failed.connect_via(app)
+def on_login_failed(sender, provider, oauth_response):
+    connection_values = \
+        get_connection_values_from_oauth_response(provider, oauth_response)
+
+    ds = current_app.extensions['security'].datastore
+    user = ds.create_user(password=str(uuid.uuid4()))
+    ds.commit()
+
+    connection_values['user_id'] = user.id
+    connection_values['display_name'] = \
+        connection_values['display_name']['givenName']
+    connection_values['full_name'] = \
+        ' '.join([connection_values['full_name']['givenName'],
+                  connection_values['full_name']['familyName']])
+    connect_handler(connection_values, provider)
+    login_user(user)
+
+    return redirect(url_for('profile'))
