@@ -1,0 +1,4 @@
+#!./flask/bin/python
+
+from cogindo import app
+app.run(debug=True, host='0.0.0.0')
