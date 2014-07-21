@@ -66,6 +66,11 @@ def create_default_users():
     for m in [User, Role, Connection]:
         m.drop_collection()
 
+    ds = current_app.extensions['security'].datastore
+    ds.create_user(name='PRAS', email='pras@example.com', password='moocow')
+    ds.create_user(name='PYRY', email='pyry@example.com', password='asdf')
+    ds.commit()
+
 
 @app.route('/profile')
 @login_required

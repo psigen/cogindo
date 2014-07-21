@@ -18,7 +18,7 @@ app.config["MONGODB_SETTINGS"] = \
 
 # Configure Google oauth login.
 app.config['SECURITY_POST_LOGIN'] = '/profile'
-app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['id']
+app.config['SECURITY_USER_IDENTITY_ATTRIBUTES'] = ['email', 'id']
 app.config['SOCIAL_GOOGLE'] = {
     'consumer_key': os.environ.get("SOCIAL_GOOGLE_KEY",
         '989743370750-67nsgjpaojfbfdpd5fugrih9r8696buj.apps.googleusercontent.com'),
