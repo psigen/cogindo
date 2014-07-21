@@ -1,6 +1,6 @@
-from flask import render_template, current_app, redirect, url_for
+from flask import current_app, redirect, url_for
 from flask.ext.security import Security, MongoEngineUserDatastore, \
-    UserMixin, RoleMixin, login_required, login_user
+    UserMixin, RoleMixin, login_user
 from flask.ext.social import Social, login_failed
 from flask.ext.social.utils import get_connection_values_from_oauth_response
 from flask.ext.social.views import connect_handler
@@ -9,7 +9,6 @@ import uuid
 
 from cogindo import app
 from cogindo import db
-from cogindo.puzzles import Team
 
 
 class Role(db.Document, RoleMixin):
@@ -25,7 +24,8 @@ class User(db.Document, UserMixin):
     remember_token = db.StringField(max_length=255)
     authentication_token = db.StringField(max_length=255)
     roles = db.ListField(db.ReferenceField(Role), default=[])
-    team = db.ReferenceField(Team)
+    team = db.ReferenceField('Team')
+    team_request = db.ReferenceField('Team')
 
     meta = {
         'indexes': [
@@ -61,7 +61,7 @@ Social(app, MongoEngineConnectionDatastore(db, Connection))
 
 
 # Create test users.
-@app.before_first_request
+#@app.before_first_request
 def create_default_users():
     for m in [User, Role, Connection]:
         m.drop_collection()
@@ -70,15 +70,6 @@ def create_default_users():
     ds.create_user(name='PRAS', email='pras@example.com', password='moocow')
     ds.create_user(name='PYRY', email='pyry@example.com', password='asdf')
     ds.commit()
-
-
-@app.route('/profile')
-@login_required
-def profile():
-    return render_template(
-        'profile.html',
-        content='Profile Page',
-        google_conn=current_app.extensions['social'].google.get_connection())
 
 
 @login_failed.connect_via(app)

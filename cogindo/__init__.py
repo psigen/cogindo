@@ -7,6 +7,8 @@ from flask.ext.restful import Api
 app = Flask(__name__)
 app.config.from_pyfile('settings.cfg')
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'  # TODO: secure this
+app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
+app.config['SECURITY_PASSWORD_SALT'] = 'SALTYEGGSANDBACON'  # TODO: security.
 
 # Configure a database client.
 app.config["MONGODB_SETTINGS"] = \
@@ -32,5 +34,6 @@ api = Api(app)
 
 # Create route views.
 import cogindo.users
+import cogindo.teams
 import cogindo.views
 cogindo.views  # TODO: keep linter from complaining.
