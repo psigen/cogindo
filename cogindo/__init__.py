@@ -8,10 +8,10 @@ app.config.from_pyfile('settings.cfg')
 app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'  # TODO: secure this
 
 # Configure a database client.
-app.config["MONGODB_SETTINGS"] = {"DB": "miridan",
-                                  #"USERNAME": "my_user_name",
-                                  #"PASSWORD": "my_secret_password",
-                                  "HOST": "127.0.0.1", "PORT": 27017}
+app.config["MONGODB_SETTINGS"] = {"DB": "app27634037",
+                                  "USERNAME": "P5oG6ydpWz",
+                                  "PASSWORD": "a7Uzfg2myw",
+                                  "HOST": "kahana.mongohq.com", "PORT": 10051}
 
 # Configure Google oauth login.
 app.config['SECURITY_POST_LOGIN'] = '/profile'
