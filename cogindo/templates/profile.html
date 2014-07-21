@@ -10,6 +10,9 @@
     {% endif %}
 {% endmacro %}
 
+{% include "_messages.html" %}
+{% include "_nav.html" %}
+
 {{ show_provider_button('google', 'Google', google_conn) }}
 
 {{ show_provider_button('facebook', 'Facebook', facebook_conn) }}

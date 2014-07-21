@@ -9,11 +9,7 @@ import uuid
 
 from cogindo import app
 from cogindo import db
-
-
-class Team(db.Document):
-    name = db.StringField(max_length=80, unique=True)
-    description = db.StringField(max_length=255)
+from cogindo.puzzles import Team
 
 
 class Role(db.Document, RoleMixin):
@@ -23,6 +19,7 @@ class Role(db.Document, RoleMixin):
 
 class User(db.Document, UserMixin):
     email = db.StringField(max_length=255)
+    name = db.StringField(max_length=255)
     password = db.StringField(max_length=255)
     active = db.BooleanField(default=True)
     remember_token = db.StringField(max_length=255)
@@ -66,14 +63,8 @@ Social(app, MongoEngineConnectionDatastore(db, Connection))
 # Create test users.
 @app.before_first_request
 def create_default_users():
-#    for m in [User, Role, Connection]:
-#        m.drop_collection()
-
-    current_app.extensions['security'].datastore.create_user(
-        email='psigen@gmail.com', password='moocow')
-    current_app.extensions['security'].datastore.create_user(
-        email='jkl@example.com', password='jkljkl')
-    current_app.extensions['security'].datastore.commit()
+    for m in [User, Role, Connection]:
+        m.drop_collection()
 
 
 @app.route('/profile')
@@ -91,7 +82,8 @@ def on_login_failed(sender, provider, oauth_response):
         get_connection_values_from_oauth_response(provider, oauth_response)
 
     ds = current_app.extensions['security'].datastore
-    user = ds.create_user(password=str(uuid.uuid4()))
+    user = ds.create_user(name=connection_values['display_name']['givenName'],
+                          password=str(uuid.uuid4()))
     ds.commit()
 
     connection_values['user_id'] = user.id
